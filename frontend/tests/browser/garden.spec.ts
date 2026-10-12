@@ -29,7 +29,11 @@ test("a configured backend offers the chat and no setup notice", async ({ page }
 
 test("chat tool adds poems, navigation works, and a new poem resets selection", async ({ page }) => {
   const errors: string[] = [];
+  const runs: any[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/agent") runs.push(request.postDataJSON());
+  });
   await page.goto("/");
   await page.getByRole("button", { name: "Open chat", exact: true }).click();
   await expect(page.getByRole("button", { name: "Nature", exact: true })).toBeVisible();
@@ -44,8 +48,14 @@ test("chat tool adds poems, navigation works, and a new poem resets selection", 
   const drawn = garden.getByTestId("haiku-illustration");
   await expect(drawn).toBeVisible();
   expect(await drawn.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
-  await expect(page.getByRole("complementary", { name: "Haiku chat" }).getByTestId("haiku-illustration")).toHaveCount(3);
+  await expect(page.getByRole("complementary", { name: "Copilot chat sidebar" }).getByTestId("haiku-illustration")).toHaveCount(3);
   await expect(page.getByRole("alert")).toHaveCount(0);
+  expect(runs).toHaveLength(3); // Displaying a poem does not start a follow-up model run.
+  expect(runs[1].messages.some((message: any) => message.role === "tool" && message.content.includes("Haiku displayed"))).toBe(true);
+  await page.getByRole("complementary", { name: "Copilot chat sidebar" }).getByRole("button", { name: "Close", exact: true }).click();
+  await expect(page.getByRole("complementary", { name: "Copilot chat sidebar" })).not.toBeVisible();
+  await page.getByRole("button", { name: "Open chat", exact: true }).click();
+  await expect(page.getByRole("complementary", { name: "Copilot chat sidebar" }).getByTestId("haiku-illustration")).toHaveCount(3);
   expect(errors).toEqual([]);
 });
 
@@ -92,5 +102,18 @@ test("survives browsers whose scrollIntoView returns a Promise", async ({ page }
 test("sample page fits a mobile viewport", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("http://127.0.0.1:8101");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test("CopilotKit sidebar fits mobile and keeps the garden usable after closing", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open chat", exact: true }).click();
+  const sidebar = page.getByRole("complementary", { name: "Copilot chat sidebar" });
+  await expect(sidebar).toBeVisible();
+  await writePoems(page, [1]);
+  expect(await sidebar.evaluate((element) => element.getBoundingClientRect().width <= innerWidth)).toBe(true);
+  await page.getByRole("complementary", { name: "Copilot chat sidebar" }).getByRole("button", { name: "Close", exact: true }).click();
+  await expect(sidebar).not.toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

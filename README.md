@@ -1,6 +1,6 @@
 # Haiku Garden
 
-A React frontend and FastAPI backend for Japanese haiku with English translations. The browser talks to the Python agent over [AG-UI](https://docs.ag-ui.com/); the agent calls the browser's `generate_haiku` tool, and React displays the poems. An OpenAI image model then paints an illustration for each poem. FastAPI serves the built frontend and the API together on one port, which is how the app runs in a Segma FastAPI container.
+A React frontend with a CopilotKit sidebar and FastAPI backend for Japanese haiku with English translations. The browser talks to the Python agent over [AG-UI](https://docs.ag-ui.com/); the agent calls the browser's `generate_haiku` tool, and React displays the poems. An OpenAI image model then paints an illustration for each poem. FastAPI serves the built frontend and the API together on one port, which is how the app runs in a Segma FastAPI container.
 
 ## Layout
 
@@ -17,7 +17,7 @@ haiku-generator/
     ├── index.html             # Vite entry page
     ├── src/
     │   ├── haiku-app.tsx      # Garden page and poem collection
-    │   ├── chat.tsx           # Chat panel; runs the AG-UI conversation
+    │   ├── chat.tsx           # CopilotKit sidebar and frontend tool registration
     │   ├── haiku-card.tsx
     │   └── lib/               # Haiku schema, frontend tool, illustrations, backend URLs and readiness
     ├── public/images/         # Original local SVG illustrations
@@ -95,7 +95,9 @@ Browser → FastAPI /illustration (poem) → image model
 Browser ← WebP image ← FastAPI
 ```
 
-`frontend/src/chat.tsx` runs the conversation with `@ag-ui/client`'s `HttpAgent`, sending `generate_haiku` as a frontend tool on every run. `main.py` uses [Pydantic AI's AG-UI adapter](https://pydantic.dev/docs/ai/integrations/ui/ag-ui/) to expose the agent in `agent.py`. When a run ends, the browser validates each `generate_haiku` call with `frontend/src/lib/haiku.ts`, adds valid poems to the collection, and records a tool result in the conversation; invalid calls are reported in the chat. Previews render while a call streams.
+`frontend/src/chat.tsx` uses `CopilotKitProvider` and `CopilotSidebar` from `@copilotkit/react-core/v2`, connected to `/agent` with `@ag-ui/client`'s `HttpAgent`. `useFrontendTool` advertises `generate_haiku`, validates arguments with `frontend/src/lib/haiku.ts`, and adds each valid call to the collection once. CopilotKit records tool results in the conversation and renders poem cards in the sidebar; invalid calls show a validation error. `followUp: false` prevents an unnecessary second model run after displaying a poem. `main.py` uses [Pydantic AI's AG-UI adapter](https://pydantic.dev/docs/ai/integrations/ui/ag-ui/) to expose the agent in `agent.py`.
+
+The provider uses CopilotKit's direct-agent option (`agents__unsafe_dev_only`) to preserve the FastAPI-only deployment. [CopilotKit documents direct connections](https://docs.copilotkit.ai/strands/copilot-runtime) as a development/prototyping path with limited support. This app does not use Copilot Runtime, Intelligence, or persistent threads. A runtime-backed integration would require changing the deployment architecture.
 
 For each poem shown, the browser posts its lines to `/illustration`. FastAPI builds the image prompt itself (`illustration.py`), so the endpoint only accepts three short lines per language, and returns a WebP image. Until it arrives, which usually takes several seconds, the card shows the local illustration the agent chose, labeled "Painting an illustration…". If illustrations are off or the image model fails, the local illustration stays.
 
