@@ -9,6 +9,6 @@ export default defineConfig({
   base: "./",
   plugins: [react()],
   server: {
-    proxy: { "/agent": api, "/health": api },
+    proxy: { "/agent": api, "/health": api, "/illustration": api },
   },
 });

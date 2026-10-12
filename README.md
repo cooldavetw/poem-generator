@@ -1,6 +1,6 @@
-# Haiku Garden
+# 街角詩境 · Street Poetry Studio
 
-A React frontend with a CopilotKit sidebar and FastAPI backend for Japanese haiku with English translations. The browser talks to the Python agent over [AG-UI](https://docs.ag-ui.com/); the agent calls the browser's `generate_haiku` tool, and React displays the poems. An OpenAI image model then paints an illustration for each poem. FastAPI serves the built frontend and the API together on one port, which is how the app runs in a Segma FastAPI container.
+A React frontend with a CopilotKit sidebar and FastAPI backend for original Traditional Chinese modern poetry (新詩). The sidebar opens on arrival and displays poems only. The main gallery starts empty; after a poem is generated, an OpenAI image model creates a street graffiti mural inspired by its imagery and mood. FastAPI serves the built frontend and API on one port, including Segma-style URL prefixes.
 
 ## Layout
 
@@ -16,11 +16,11 @@ haiku-generator/
 └── frontend/
     ├── index.html             # Vite entry page
     ├── src/
-    │   ├── haiku-app.tsx      # Garden page and poem collection
+    │   ├── poem-app.tsx       # Studio page and poem collection
     │   ├── chat.tsx           # CopilotKit sidebar and frontend tool registration
-    │   ├── haiku-card.tsx
-    │   └── lib/               # Haiku schema, frontend tool, illustrations, backend URLs and readiness
-    ├── public/images/         # Original local SVG illustrations
+    │   ├── poem-card.tsx
+    │   └── lib/               # Poem schema, frontend tool, illustrations, backend URLs and readiness
+    ├── public/images/         # Legacy assets; not displayed by the studio
     ├── tests/                 # TypeScript unit tests and browser tests
     ├── package.json
     ├── package-lock.json
@@ -45,8 +45,8 @@ Set `OPENAI_API_KEY` in the root `.env.local`. Exported environment variables ta
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `HAIKU_MODEL` | `openai:gpt-4.1-mini` | Chat model that writes the poems |
-| `HAIKU_IMAGE_MODEL` | `gpt-image-1-mini` | OpenAI image model that illustrates each poem; empty turns illustrations off |
+| `HAIKU_MODEL` | `openai:gpt-4.1-mini` | Chat model that writes Chinese modern poetry |
+| `HAIKU_IMAGE_MODEL` | `gpt-image-1-mini` | OpenAI image model that paints graffiti for each poem; empty turns illustrations off |
 | `HAIKU_IMAGE_QUALITY` | `low` | `low`, `medium`, `high` or `auto`; higher is slower and costs more |
 
 ## Run
@@ -59,9 +59,9 @@ source .venv/bin/activate
 python main.py
 ```
 
-Open http://127.0.0.1:8000 and use the chat button. Try “Write a haiku about the ocean.” New poems appear first; Previous and Next browse your collection. Interactive API docs are at http://127.0.0.1:8000/docs.
+Open http://127.0.0.1:8000. The sidebar opens automatically; choose 城市夜色, 雨後街角, or 想念一個人, or enter your own theme. Poems appear in the sidebar and gallery; only the gallery shows generated artwork. 上一首 and 下一首 browse your collection. On mobile, close the sidebar to view the mural. Interactive API docs are at http://127.0.0.1:8000/docs.
 
-Rebuild the frontend after changing its source; restart FastAPI after changing `.env.local`. Before the first build, `/` returns 503 with build instructions. If FastAPI has no API key, the page shows a sample poem and setup instructions.
+Rebuild the frontend after changing its source; restart FastAPI after changing `.env.local`. Before the first build, `/` returns 503 with build instructions. If FastAPI has no API key, the page shows setup instructions and an empty studio. No sample poem or painting is shown.
 
 ### Development
 
@@ -72,7 +72,7 @@ cd frontend
 npm run dev
 ```
 
-Open http://127.0.0.1:5173. Vite proxies `/agent` and `/health` to FastAPI; set `API_URL` to use a backend elsewhere.
+Open http://127.0.0.1:5173. Vite proxies `/agent`, `/health`, and `/illustration` to FastAPI; set `API_URL` to use a backend elsewhere.
 
 ## Segma deployment
 
@@ -90,16 +90,20 @@ To call `/agent` from a page on another website through a Segma webhook URL, add
 
 ```text
 Browser → FastAPI /agent (AG-UI) → chat model
-Browser ← streamed text and generate_haiku tool calls ← FastAPI
+Browser ← streamed text and generate_poem tool calls ← FastAPI
 Browser → FastAPI /illustration (poem) → image model
 Browser ← WebP image ← FastAPI
 ```
 
-`frontend/src/chat.tsx` uses `CopilotKitProvider` and `CopilotSidebar` from `@copilotkit/react-core/v2`, connected to `/agent` with `@ag-ui/client`'s `HttpAgent`. `useFrontendTool` advertises `generate_haiku`, validates arguments with `frontend/src/lib/haiku.ts`, and adds each valid call to the collection once. CopilotKit records tool results in the conversation and renders poem cards in the sidebar; invalid calls show a validation error. `followUp: false` prevents an unnecessary second model run after displaying a poem. `main.py` uses [Pydantic AI's AG-UI adapter](https://pydantic.dev/docs/ai/integrations/ui/ag-ui/) to expose the agent in `agent.py`.
+`frontend/src/chat.tsx` uses `CopilotKitProvider` and `CopilotSidebar` from `@copilotkit/react-core/v2`, connected to `/agent` with `@ag-ui/client`'s `HttpAgent`. `useFrontendTool` advertises `generate_poem`, validates arguments with `frontend/src/lib/poem.ts`, and adds each valid call to the collection once. CopilotKit records tool results in the conversation and renders poem cards without images in the sidebar; invalid calls show a validation error. `followUp: false` prevents an unnecessary second model run after displaying a poem. `main.py` uses [Pydantic AI's AG-UI adapter](https://pydantic.dev/docs/ai/integrations/ui/ag-ui/) to expose the agent in `agent.py`.
 
 The provider uses CopilotKit's direct-agent option (`agents__unsafe_dev_only`) to preserve the FastAPI-only deployment. [CopilotKit documents direct connections](https://docs.copilotkit.ai/strands/copilot-runtime) as a development/prototyping path with limited support. This app does not use Copilot Runtime, Intelligence, or persistent threads. A runtime-backed integration would require changing the deployment architecture.
 
-For each poem shown, the browser posts its lines to `/illustration`. FastAPI builds the image prompt itself (`illustration.py`), so the endpoint only accepts three short lines per language, and returns a WebP image. Until it arrives, which usually takes several seconds, the card shows the local illustration the agent chose, labeled "Painting an illustration…". If illustrations are off or the image model fails, the local illustration stays.
+For each validated poem, the browser posts `{title, lines}` to `/illustration`. Both the frontend and backend require a nonempty title of at most 80 characters and 2–16 nonempty lines of at most 200 characters each. The agent writes free verse rather than haiku or fixed-meter verse. FastAPI builds the image prompt itself (`illustration.py`), using the poem's title and all lines to guide spray-painted gradients, stencil silhouettes, layered paint, and concrete textures. It asks for no lettering inside the mural; the poem is rendered separately as accessible text.
+
+No artwork is requested or displayed before a poem is generated. While painting, the main gallery shows the poem and a progress message. If illustrations are off or generation fails, the poem stays with an unavailable-artwork message; no local placeholder painting appears. The returned WebP is shown uncropped in the main gallery only.
+
+The `HAIKU_*` environment variable names remain compatible with existing deployments even though the app now generates Chinese modern poetry.
 
 ## Tests
 
@@ -121,8 +125,8 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Browser tests run against the built frontend served by FastAPI, so run `npm run build` first. They start the FastAPI test services automatically, using the root `.venv` with `requirements-dev.txt`. They cover missing-key setup, backend readiness, streamed tool calls, collection navigation, serving under a Segma-style URL prefix opened without a trailing slash, and mobile layout. Only the models are simulated; live generation requires your own API key.
+Browser tests run against the built frontend served by FastAPI, so run `npm run build` first. They start the FastAPI test services automatically, using the root `.venv` with `requirements-dev.txt`. They cover missing-key setup, the automatically opened sidebar, an empty initial gallery with no image requests, streamed poem calls, collection navigation, artwork restricted to the main gallery, painting progress/failure, serving under a Segma-style URL prefix, and mobile layout. Only the models are simulated; live generation requires your own API key.
 
 ## Current limits
 
-The browser retains the latest 50 poems and their illustrations in memory; refresh clears the collection and the conversation. Each illustration is one image-model call, billed by OpenAI. The schema enforces three nonempty lines per language; poetic quality and Japanese mora counts depend on the model. Model calls may incur provider usage charges. Add authentication, usage limits, and persistence as needed before public deployment.
+The browser retains the latest 50 poems and their illustrations in memory; refresh clears the collection and the conversation. Each illustration is one image-model call, billed by OpenAI. The schema enforces a title and 2–16 nonempty lines; poetic quality depends on the model. Model calls may incur provider usage charges. Add authentication, usage limits, and persistence as needed before public deployment.

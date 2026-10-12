@@ -1,86 +1,86 @@
 import { createContext, useContext, useMemo, useRef, useState, type ComponentProps } from "react";
 import { HttpAgent } from "@ag-ui/client";
 import { CopilotKitProvider, CopilotSidebar, ToolCallStatus, useConfigureSuggestions, useFrontendTool, type ReactToolCallRenderer } from "@copilotkit/react-core/v2";
-import { createHaikuHandler, HAIKU_TOOL, HAIKU_TOOL_DESCRIPTION } from "./lib/agent";
+import { createPoemHandler, POEM_TOOL, POEM_TOOL_DESCRIPTION } from "./lib/agent";
 import { backendUrl } from "./lib/backend";
-import { haikuSchema, type Haiku, type SavedHaiku } from "./lib/haiku";
-import { HaikuCard } from "./haiku-card";
+import { poemSchema, type Poem, type SavedPoem } from "./lib/poem";
+import { PoemCard } from "./poem-card";
 
 const suggestions = [
-  { title: "Nature", message: "Write me a haiku about nature." },
-  { title: "Ocean", message: "Create a haiku about the ocean." },
-  { title: "Spring", message: "Generate a haiku about spring." },
+  { title: "城市夜色", message: "請寫一首關於城市夜色的繁體中文新詩。" },
+  { title: "雨後街角", message: "請寫一首關於雨後街角的繁體中文新詩。" },
+  { title: "想念一個人", message: "請寫一首關於想念一個人的繁體中文新詩。" },
 ];
 
-const HaikuCollection = createContext<SavedHaiku[]>([]);
+const PoemCollection = createContext<SavedPoem[]>([]);
 
 type ChatProps = {
-  haikus: SavedHaiku[];
-  onHaiku: (haiku: Haiku, toolCallId: string) => void;
+  poems: SavedPoem[];
+  onPoem: (poem: Poem, toolCallId: string) => void;
 };
 
-export function Chat({ haikus, onHaiku }: ChatProps) {
+export function Chat({ poems, onPoem }: ChatProps) {
   const [agents] = useState(() => ({ default: new HttpAgent({ url: backendUrl("agent") }) }));
   return (
     <CopilotKitProvider agents__unsafe_dev_only={agents} enableInspector={false} showIntelligenceIndicator={false}>
-      <HaikuCopilot haikus={haikus} onHaiku={onHaiku} />
+      <PoemCopilot poems={poems} onPoem={onPoem} />
     </CopilotKitProvider>
   );
 }
 
-function HaikuCopilot({ haikus, onHaiku }: ChatProps) {
-  const [open, setOpen] = useState(false);
+function PoemCopilot({ poems, onPoem }: ChatProps) {
+  const [open, setOpen] = useState(true);
   const [error, setError] = useState<string>();
-  const latest = useRef(onHaiku);
-  latest.current = onHaiku;
-  const handler = useMemo(() => createHaikuHandler((haiku, id) => latest.current(haiku, id)), []);
+  const latest = useRef(onPoem);
+  latest.current = onPoem;
+  const handler = useMemo(() => createPoemHandler((poem, id) => latest.current(poem, id)), []);
 
   useConfigureSuggestions({ suggestions, available: "before-first-message" }, []);
   useFrontendTool({
-    name: HAIKU_TOOL,
-    description: HAIKU_TOOL_DESCRIPTION,
-    parameters: haikuSchema,
+    name: POEM_TOOL,
+    description: POEM_TOOL_DESCRIPTION,
+    parameters: poemSchema,
     // Displaying a poem completes the action; a second model run is unnecessary.
     followUp: false,
     handler: async (args, { toolCall }) => {
       setError(undefined);
       return handler(args, toolCall.id);
     },
-    render: HaikuToolPreview,
+    render: PoemToolPreview,
   }, []);
 
   return (
-    <HaikuCollection.Provider value={haikus}>
-      <div className="haiku-copilot" data-open={open}>
+    <PoemCollection.Provider value={poems}>
+      <div className="poem-copilot" data-open={open}>
         <CopilotSidebar
           open={open}
           onOpenChange={setOpen}
           width="min(420px, 100vw)"
           labels={{
-            modalHeaderTitle: "Your haiku companion",
+            modalHeaderTitle: "一起寫一首詩",
             chatToggleOpenLabel: "Open chat",
             chatToggleCloseLabel: "Close chat",
-            chatInputPlaceholder: "Choose a subject for your haiku…",
-            welcomeMessageText: "What moment would you like to capture in a haiku?",
-            chatDisclaimerText: "Japanese verse · English translations",
+            chatInputPlaceholder: "寫下主題、心情或一個意象…",
+            welcomeMessageText: "今天，想把哪個瞬間寫成詩？",
+            chatDisclaimerText: "繁體中文新詩 · 讓文字變成街頭色彩",
           }}
           input={{ textArea: { "aria-label": "Message" } }}
           onError={(event) => { if ("error" in event) setError(event.error.message); }}
         />
         {error && <p className="copilot-error" role="alert">{error}</p>}
       </div>
-    </HaikuCollection.Provider>
+    </PoemCollection.Provider>
   );
 }
 
-function HaikuToolPreview({ args, toolCallId, status, result }: ComponentProps<ReactToolCallRenderer<Haiku>["render"]>) {
-  const haikus = useContext(HaikuCollection);
-  const saved = haikus.find((haiku) => haiku.id === toolCallId);
-  const parsed = haikuSchema.safeParse(args);
-  const haiku = saved ?? (parsed.success ? parsed.data : undefined);
+function PoemToolPreview({ args, toolCallId, status, result }: ComponentProps<ReactToolCallRenderer<Poem>["render"]>) {
+  const poems = useContext(PoemCollection);
+  const saved = poems.find((poem) => poem.id === toolCallId);
+  const parsed = poemSchema.safeParse(args);
+  const poem = saved ?? (parsed.success ? parsed.data : undefined);
   return (
     <div className="tool-preview">
-      {haiku ? <HaikuCard haiku={haiku} /> : <p>Composing your haiku…</p>}
+      {poem ? <PoemCard poem={poem} showArtwork={false} /> : <p>正在構思你的新詩…</p>}
       {status === ToolCallStatus.Complete && result?.includes("not displayed") && <p role="alert">{result}</p>}
     </div>
   );

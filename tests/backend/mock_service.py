@@ -18,7 +18,7 @@ TINY_WEBP = base64.b64decode("UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3
 
 
 async def stream_poem(messages, info):
-    assert any(tool.name == "generate_haiku" for tool in info.function_tools)
+    assert any(tool.name == "generate_poem" for tool in info.function_tools)
     prompts = [
         part.content
         for message in messages
@@ -28,19 +28,17 @@ async def stream_poem(messages, info):
     match = re.search(r"poem (\d+)", prompts[-1], re.IGNORECASE)
     number = match.group(1) if match else "1"
     poem = {
-        "japanese": ["春風や", "小川の岸に", "花ひとつ"],
-        "english": [f"Poem {number}", "A river winds through the reeds", "Spring is here again"],
-        "image_name": "spring.svg",
-        "background": "blossom",
+        "title": f"詩作 {number}",
+        "lines": ["雨把城市的輪廓洗亮", "霓虹在水窪裡練習呼吸", "我把沒說出口的話", "留給最後一班公車"],
     }
-    yield {0: DeltaToolCall(name="generate_haiku", json_args=json.dumps(poem))}
+    yield {0: DeltaToolCall(name="generate_poem", json_args=json.dumps(poem))}
 
 
 test_agent = Agent(FunctionModel(stream_function=stream_poem), instructions=INSTRUCTIONS)
 main.get_agent = lambda: test_agent
 
 
-async def fake_draw(japanese, english):
+async def fake_draw(title, lines):
     await asyncio.sleep(0.5)  # long enough to see the placeholder
     return TINY_WEBP
 

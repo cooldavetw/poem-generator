@@ -27,8 +27,8 @@ Line = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max
 
 
 class Poem(BaseModel):
-    japanese: list[Line] = Field(min_length=3, max_length=3)
-    english: list[Line] = Field(min_length=3, max_length=3)
+    title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
+    lines: list[Line] = Field(min_length=2, max_length=16)
 
 
 def require_key() -> None:
@@ -41,7 +41,7 @@ def require_key() -> None:
 
 def create_app(frontend_dir: Path | None = None) -> FastAPI:
     build_dir = Path(frontend_dir) if frontend_dir is not None else PROJECT_ROOT / "frontend" / "dist"
-    app = FastAPI(title="Haiku Garden API", version="1.0.0")
+    app = FastAPI(title="Street Poetry Studio API", version="1.0.0")
 
     @app.get("/health")
     async def health() -> dict[str, str | bool]:
@@ -53,7 +53,7 @@ def create_app(frontend_dir: Path | None = None) -> FastAPI:
 
     @app.post("/agent", response_class=Response)
     async def run_agent(request: Request) -> Response:
-        """Stream AG-UI events, including calls to the browser's generate_haiku tool."""
+        """Stream AG-UI events, including calls to the browser's generate_poem tool."""
         require_key()
         return await AGUIAdapter.dispatch_request(request, agent=get_agent())
 
@@ -68,7 +68,7 @@ def create_app(frontend_dir: Path | None = None) -> FastAPI:
         if not illustration.image_model():
             raise HTTPException(status_code=404, detail="Illustrations are turned off: HAIKU_IMAGE_MODEL is empty.")
         try:
-            image = await illustration.draw(poem.japanese, poem.english)
+            image = await illustration.draw(poem.title, poem.lines)
         except openai.APIError as e:
             raise HTTPException(status_code=502, detail=f"The image model failed: {e.message}") from e
         return Response(image, media_type=illustration.MEDIA_TYPE, headers={"Cache-Control": "no-store"})

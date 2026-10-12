@@ -1,51 +1,50 @@
-:root { color-scheme: light; --ink: #293f38; --muted: #66766c; --paper: #f8f7f2; }
+:root { color-scheme: light; --ink: #20262c; --muted: #626a73; --paper: #f4f2ed; }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--paper); color: var(--ink); font-family: Arial, Helvetica, sans-serif; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: Arial, "Noto Sans TC", sans-serif; }
 button { font: inherit; }
-button:focus-visible, a:focus-visible { outline: 3px solid #447c67; outline-offset: 4px; }
-.garden { min-height: 100dvh; padding: 56px 24px 90px; background: radial-gradient(ellipse at top left, #e9eee4 0, transparent 55%); }
-.intro { text-align: center; max-width: 720px; margin: 0 auto 36px; }
-.eyebrow { font-size: 10px; letter-spacing: .24em; color: var(--muted); }
-h1 { font-family: Georgia, serif; font-size: clamp(36px, 6vw, 56px); font-weight: 400; margin: 16px 0; letter-spacing: -.035em; }
-h1 span { display: block; font-family: serif; font-size: 16px; letter-spacing: .25em; margin-top: 14px; color: var(--muted); }
-.intro > p:last-child { font-size: 14px; color: var(--muted); line-height: 1.7; }
-.setup { max-width: 650px; margin: 0 auto 28px; padding: 18px 22px; background: #ecefe5; border: 1px solid #d3dccb; border-radius: 12px; font-size: 14px; line-height: 1.6; }
+button:focus-visible, a:focus-visible { outline: 3px solid #d36539; outline-offset: 4px; }
+.studio { min-height: 100dvh; padding: 48px 24px 80px; background: radial-gradient(ellipse at top left, #e7ded0 0, transparent 65%); }
+.intro { text-align: center; max-width: 760px; margin: 0 auto 32px; }
+.eyebrow { font-size: 10px; letter-spacing: .24em; color: #a64b27; }
+h1 { font-family: "Noto Serif TC", serif; font-size: clamp(36px, 6vw, 54px); font-weight: 500; margin: 16px 0; letter-spacing: .12em; }
+h1 span { display: block; font-family: Arial, sans-serif; font-size: 13px; letter-spacing: .18em; margin-top: 14px; color: var(--muted); }
+.intro > p:last-child { font-size: 14px; color: var(--muted); line-height: 1.8; }
+.setup { max-width: 760px; margin: 0 auto 28px; padding: 18px 22px; background: #eee5d8; border: 1px solid #dccab7; border-radius: 12px; font-size: 14px; line-height: 1.8; }
 .setup p { margin: 6px 0 0; }
 code { overflow-wrap: anywhere; }
-.poem-gallery { max-width: 650px; margin: auto; }
-.poem-label { text-align: center; font-size: 10px; letter-spacing: .2em; color: var(--muted); margin-bottom: 16px; }
-.haiku-card { overflow: hidden; border: 1px solid #dce1d7; border-radius: 20px; box-shadow: 0 15px 50px #2034270a; }
-.haiku-lines { display: grid; gap: 28px; text-align: center; padding: 44px 24px; }
-.haiku-line p { margin: 0; overflow-wrap: anywhere; }
-.japanese { font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", serif; font-size: clamp(25px, 4vw, 36px); letter-spacing: .12em; line-height: 1.6; color: #293f38; }
-.haiku-line .english { font-family: Georgia, serif; font-size: 16px; line-height: 1.6; font-style: italic; color: #617367; margin-top: 7px; }
-.scene { display: block; width: 100%; height: auto; border-top: 1px solid #dce1d7; }
+.poem-gallery { max-width: 760px; margin: auto; }
+.poem-label { font-size: 11px; letter-spacing: .2em; color: #a64b27; }
+.empty-studio { padding: 56px 28px; border: 1px dashed #bfb7aa; border-radius: 16px; text-align: center; line-height: 1.9; }
+.empty-studio h2 { font-family: serif; font-weight: 500; font-size: 27px; }
+.empty-studio p { color: var(--muted); font-size: 14px; }
+.poem-card { overflow: hidden; background: #fffdf8; border: 1px solid #d9d5cc; border-radius: 16px; box-shadow: 0 15px 50px #20262c0a; }
+.poem-lines { padding: 32px 28px; }
+.poem-lines h2 { margin: 0 0 24px; font-family: "Noto Serif TC", serif; font-size: 24px; font-weight: 500; }
+.poem-lines p { margin: 0; overflow-wrap: anywhere; font-family: "Noto Serif TC", serif; font-size: clamp(17px, 2vw, 22px); letter-spacing: .04em; line-height: 2; }
+.artwork { display: block; width: 100%; height: auto; }
+.artwork-frame { border-top: 1px solid #d9d5cc; }
+.artwork-status { margin: 0; padding: 28px; background: #eeeae2; color: #626a73; font-size: 14px; text-align: center; line-height: 1.8; }
 .carousel-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; font-size: 13px; color: var(--muted); }
-.carousel-controls button { border: 1px solid #cbd4c8; border-radius: 30px; padding: 10px 16px; color: var(--ink); background: #fffdf7; cursor: pointer; }
+.carousel-controls button { border: 1px solid #c9c1b5; border-radius: 30px; padding: 10px 16px; color: var(--ink); background: #fffdf8; cursor: pointer; }
 .carousel-controls button:disabled { opacity: .35; cursor: default; }
-.garden footer { text-align: center; max-width: 650px; margin: 28px auto 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.studio footer { text-align: center; max-width: 760px; margin: 28px auto 0; color: var(--muted); font-size: 12px; line-height: 1.8; }
 .tool-preview { max-width: 100%; }
-.tool-preview .haiku-lines { padding: 20px 12px; gap: 16px; }
-.tool-preview .japanese { font-size: 24px; }
-.tool-preview .english { font-size: 13px; }
-@media (max-width: 480px) { .garden { padding: 32px 16px 90px; } .haiku-lines { padding: 32px 16px; gap: 22px; } }
-/* CopilotKit scopes its component styles; keep the garden's paper-and-ink palette. */
-.haiku-copilot [data-copilotkit] {
-  --background: #fffdf7;
-  --foreground: #293f38;
-  --primary: #293f38;
-  --primary-foreground: #fffdf7;
-  --muted: #ecefe5;
-  --muted-foreground: #66766c;
-  --border: #dce1d7;
-  --ring: #447c67;
-  --secondary: #ecefe5;
-  --secondary-foreground: #293f38;
-  --accent: #ecefe5;
-  --accent-foreground: #293f38;
+.tool-preview .poem-lines { padding: 20px 18px; }
+.tool-preview .poem-lines h2 { font-size: 20px; margin-bottom: 16px; }
+.tool-preview .poem-lines p { font-size: 16px; }
+.poem-copilot [data-copilotkit] {
+  --background: #fffdf8;
+  --foreground: #20262c;
+  --primary: #a64b27;
+  --primary-foreground: #fffdf8;
+  --muted: #eeeae2;
+  --muted-foreground: #626a73;
+  --border: #d9d5cc;
+  --ring: #d36539;
+  --secondary: #eeeae2;
+  --secondary-foreground: #20262c;
+  --accent: #eeeae2;
+  --accent-foreground: #20262c;
 }
-.haiku-copilot .tool-preview { --muted: #66766c; }
 .copilot-error { position: fixed; bottom: 110px; right: 20px; z-index: 1300; width: min(380px, calc(100vw - 40px)); padding: 12px 16px; border-radius: 12px; background: #f6e6e3; color: #7a2e22; font-size: 14px; }
-.scene-frame { position: relative; }
-.scene { aspect-ratio: 800 / 360; object-fit: cover; }
-.painting { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); margin: 0; padding: 6px 14px; border-radius: 30px; background: #fffdf7d9; color: var(--muted); font-size: 12px; letter-spacing: .04em; white-space: nowrap; }
+@media (max-width: 480px) { .studio { padding: 32px 16px 80px; } .poem-lines { padding: 24px 20px; } .empty-studio { padding: 32px 20px; } }
